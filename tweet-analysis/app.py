@@ -27,10 +27,10 @@ def create_app():
 
     # Get Followers
 
-    # Get topics of current feed
-    @app.route('/feed_topics')
-    def feed_topic():
-        topics = topic_model(TWITTER.home_timeline())
+    # Get topics last 250 tweets
+    @app.route('/topics')
+    def user_topic():
+        topics = topic_model(get_tweets('matt42kirby'))
         return jsonify(topics)
 
     return app

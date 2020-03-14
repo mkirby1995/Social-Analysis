@@ -1,4 +1,6 @@
 from decouple import config
+import tweepy
+import basilica
 from flask import Flask, render_template, request, jsonify
 from .topic_model import topic_model, get_tweets
 import os

@@ -1,4 +1,6 @@
 # Generate a topic model given a username
+from decouple import config
+
 import tweepy
 import basilica
 import nltk
@@ -16,55 +18,48 @@ from gensim.models import CoherenceModel
 # spacy for lemmatization
 import spacy
 
-# Plotting tools
-import pyLDAvis
-import pyLDAvis.gensim  # don't skip this
-import matplotlib.pyplot as plt
-%matplotlib inline
-
 # NLTK Stop words
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
 stop_words.extend(['from', 'subject', 're', 'edu', 'use', 'https', 'try', 'http'])
 
-spacy.load('en')
+nlp = spacy.load('en_core_web_lg', disable=['parser', 'ner'])
+mallet_path = '/Users/mattkirby/Social-Analysis/tweet-analysis/mallet-2.0.8/bin/mallet' # update this path
 
-mallet_path = '/content/mallet-2.0.8/bin/mallet' # update this path
 
+TWITTER_AUTH = tweepy.OAuthHandler(config('TWITTER_CONSUMER_KEY'),
+                                   config('TWITTER_CONSUMER_SECRET'))
 
-TWITTER_AUTH = tweepy.OAuthHandler('KSRGR9mHi8uksXocrmftDwGpj',
-                                   'KH2CCKo1uEnuPyv7jys50IOu0gtw2hMCEcvRWO0100IwhVKnJ2')
-
-TWITTER_AUTH.set_access_token('219574192-Dw9dsBrkLwa36OCF1yoLdGalT4nD2w0ByGHKB762',
-                              'eMUXUCS7JcIUCqaF7FofH9zVjNiWZMpuexNRzOX4OgMgP')
+TWITTER_AUTH.set_access_token(config('TWITTER_ACCESS_TOKEN'),
+                              config('TWITTER_ACCESS_TOKEN_SECRET'))
 
 TWITTER = tweepy.API(TWITTER_AUTH)
 
-#TODO: Remove key with decouple
-BASILICA = basilica.Connection('94bdb651-fa65-4a60-9db2-a64335b8bc74')
+BASILICA = basilica.Connection(config('BASILICA_KEY'))
 
 
-def topic_model():
+def get_tweets(username):
+        # Retrive tweets
+        twitter_user = TWITTER.get_user('matt42kirby')
+        tweets = twitter_user.timeline(
+                count=250, exclude_replies = False, include_rts = False,
+                tweet_mode = 'extended')
+        return tweets
 
 
-    # Retrive tweets
-    twitter_user = TWITTER.get_user('matt42kirby')
-    tweets = twitter_user.timeline(
-            count=250, exclude_replies = False, include_rts = False,
-            tweet_mode = 'extended')
-
+def topic_model(corpus):
 
     # Clean corpus
-    def tokenize(tweets):
-        for tweet in tweets:
+    def tokenize(corpus):
+        for tweet in corpus:
             yield(gensim.utils.simple_preprocess(
                 str(tweet.full_text), deacc=True))
 
-    data_words = list(tokenize(tweets))
+    data_words = list(tokenize(corpus))
 
     # Build the bigram and trigram models
-    #bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100) # higher threshold fewer phrases.
-    #trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
+    bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100) # higher threshold fewer phrases.
+    trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
 
     # Faster way to get a sentence clubbed as a trigram/bigram
     bigram_mod = gensim.models.phrases.Phraser(bigram)
@@ -96,9 +91,6 @@ def topic_model():
     # Form Bigrams
     data_words_bigrams = make_bigrams(data_words_nostops)
 
-    # python3 -m spacy download en
-    nlp = spacy.load('en', disable=['parser', 'ner'])
-
     # Do lemmatization keeping only noun, adj, vb, adv
     data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
@@ -114,4 +106,12 @@ def topic_model():
 
     ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=20, id2word=id2word)
 
-    return topic_model
+    topics = {}
+
+    for i in range(0, ldamallet.num_topics):
+        topic = []
+        for word_record in ldamallet.print_topic(i).split('+'):
+            topic.append((word_record.split("*")[0], word_record.split("*")[1].replace('"', "").replace(' ', "")))
+        topics['topic' + str(i)] = topic
+
+    return topics

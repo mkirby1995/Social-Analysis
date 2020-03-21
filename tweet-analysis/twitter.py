@@ -24,3 +24,5 @@ def get_timeline(username):
         tweet_mode = 'extended')
     timeline = [tweet.full_text for tweet in timeline]
     return timeline
+
+def get_

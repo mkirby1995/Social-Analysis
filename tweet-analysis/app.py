@@ -5,6 +5,16 @@ from flask import Flask, render_template, request, jsonify
 from .utils import new_corpus, mallet_topics
 import os
 
+"""
+Search twitter for topic
+Spin up and run every x hours
+Find out how many new tweets user has
+See who retweeted a tweet
+Run topic analysis on their timeline
+Sentiment analysis on tweets ?? any good ??
+Tweets per day?
+"""
+
 #Import Keys
 TWITTER_AUTH = tweepy.OAuthHandler(
     config('TWITTER_CONSUMER_KEY'),

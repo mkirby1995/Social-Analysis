@@ -2,7 +2,6 @@ from decouple import config
 import tweepy
 import basilica
 from flask import Flask, render_template, request, jsonify
-from .utils import new_corpus, mallet_topics
 import os
 
 """
@@ -25,7 +24,6 @@ TWITTER_AUTH.set_access_token(
 TWITTER = tweepy.API(TWITTER_AUTH)
 BASILICA = basilica.Connection(config('BASILICA_KEY'))
 
-
 def create_app():
     app = Flask(__name__)
     #app.config["SQLAlchemy_DATABASE_URI"] = os.environ.get("DATABASE_URL")
@@ -35,7 +33,8 @@ def create_app():
 
     @app.route('/')
     def root():
-        return 'Success!'
+        return render_template("index.html")
+
 
 
     # Get topics last 250 tweets

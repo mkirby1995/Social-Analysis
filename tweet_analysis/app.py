@@ -2,7 +2,11 @@ from decouple import config
 import tweepy
 import basilica
 from flask import Flask, render_template, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 import os
+from .models import DB, User, Tweet
+from .twitter import add_user, add_users
+
 
 """
 Search twitter for topic
@@ -24,17 +28,19 @@ TWITTER_AUTH.set_access_token(
 TWITTER = tweepy.API(TWITTER_AUTH)
 BASILICA = basilica.Connection(config('BASILICA_KEY'))
 
+
 def create_app():
+    """Create and configure an instance of the flask application"""
     app = Flask(__name__)
-    #app.config["SQLAlchemy_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    #app.config["ENV"] = config("ENV")
-    #DB.init-app(app)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    DB.init_app(app)
 
 
     @app.route('/')
     def root():
+        users = User.query.all()
         return render_template("index.html")
-
 
 
     # Get topics last 250 tweets

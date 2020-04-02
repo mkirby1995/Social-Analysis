@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WhoTweet - {{ title }}</title>
+    <link rel="stylesheet" href="https://unpkg.com/picnic"/>
+  </head>
+  <body>
+    <nav>
+      <a href="/" class="brand"><span>WhoTweet!</span></a>
+
+      <!-- responsive-->
+      <input id="bmenub" type="checkbox" class="show">
+      <label for="bmenub" class="burger pseudo button">Menu</label>
+
+      <div class="menu">
+        <a href="/update" class="button warning">Update Tweets</a>
+      </div>
+    </nav>
+
+    <article class="flex two" style="padding: 3em 1em;">
+      {% block content %}
+      <div>
+        <h1>{{ title }}</h1>
+        <form action="/compare" method="post">
+          <select name="user1">
+            {% for bird in birds %}
+            <option value="{{ bird.name }}">{{ bird.name }}</option>
+            {% endfor %}
+          </select>
+          <select name="user2">
+            {% for bird in birds %}
+            <option value="{{ bird.name }}">{{ bird.name }}</option>
+            {% endfor %}
+          </select>
+          <input type="text" name="tweet_text" placeholder="Tweet text to predict">
+          <input type="submit" value="Compare Birds">
+        </form>
+        <h3>Recent comparisons:</h3>
+        {% for comparison in comparisons %}
+        <span class="stack">{{ comparison }}</span>
+        {% endfor %}
+      </div>
+      <div>
+        <h2>Birds</h2>
+        {% for bird in birds %}
+        <a href="/bird/{{ bird.name }}"><span class="stack">{{ bird.name }}</span></a>
+        {% endfor %}
+        <form action="/bird" method="post">
+          <input type="text" name="bird_name" placeholder="Bird to add">
+          <input type="submit" value="Add Bird">
+        </form>
+      </div>
+      {% endblock %}
+    </article>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/umbrellajs"/> -->
+  </body>
+</html>
